@@ -17,8 +17,8 @@ const pushOps = {
 let files = {}
 fs.readdir('public', (error, data)=>{
   data.forEach(name=>{
-    files[`/${name}`]=fs
-      .readFileSync(path.join(__dirname, 'public', `/${name}`), {encoding: 'utf8'})
+    files[`${name}`]=fs
+      .readFileSync(path.join(__dirname, 'public', `${name}`), {encoding: 'utf8'})
       .split('\n')
       .filter(line=>line.match(/script *?src *?= *?"(.*)"/)!=null)
       .map(line=>line.match(/script *?src *?= *?"(.*)"/)[1])
@@ -29,20 +29,43 @@ const logger = require('morgan')
 app.use(logger('dev'))
 app.use((request, response, next)=>{
 
-  let urlName = url.parse(request.url).pathname
+  let urlName = url.parse(request.url).pathname.substr(1)
   // console.log(urlName, files)
-  if (urlName === '' || urlName === '/') urlName = '/index.html'
+  if (urlName === '' || urlName === '/') urlName = 'index.html'
   if (files[urlName]) {
+    // let promises = []
+    let promises = files[urlName]
+      .filter(name=>(name.substr(0,4)!='http'))
+      .map((fileToPush)=>{
+        let fileToPushPath = path.join(__dirname, 'public', fileToPush)
+        return (cb)=>{
+          fs.readFile(fileToPushPath, (error, data)=>{
+            if (error) return cb(error)
+            console.log('Pushing', fileToPush, fileToPushPath)
+            response.push(`/${fileToPush}`, pushOps).end(data)
+            cb()
+          })
+        }
+      })
+    console.log(promises)
+    // promises = []
+    // promises.push((cb)=>{
+    //   fs.readFile(path.join(__dirname, 'public', urlName), (error, data)=>{
+    //     if (error) return cb(error)
+    //     response.write(data)
+    //     cb()
+    //   })
+    // })
+    // promises.reverse()
+    require('neo-async').parallel(promises, (results)=>{
+      console.log('end', results)
+      fs.readFile(path.join(__dirname, 'public', urlName), (error, data)=>{
+        if (error) return cb(error)
+        response.write(data)
+        response.end()
+      })
 
-    fs.createReadStream(path.join(__dirname, 'public', urlName))
-      .pipe(response)
-    files[urlName].forEach((fileToPush)=>{
-      console.log('Pushing', fileToPush)
-      fs.createReadStream(path.join(__dirname, 'public', fileToPush))
-        .pipe(response.push(`${fileToPush}`, pushOps))
     })
-    response.end()
-    // response.sendFile(path.join(__dirname, 'public', urlName))
   } else {
     return next()
   }
