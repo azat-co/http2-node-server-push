@@ -31,36 +31,28 @@ app.use((request, response, next)=>{
 
   let urlName = url.parse(request.url).pathname
   // console.log(urlName, files)
-
+  if (urlName === '' || urlName === '/') urlName = '/index.html'
   if (files[urlName]) {
+
+    fs.createReadStream(path.join(__dirname, 'public', urlName))
+      .pipe(response)
     files[urlName].forEach((fileToPush)=>{
       console.log('Pushing', fileToPush)
       fs.createReadStream(path.join(__dirname, 'public', fileToPush))
         .pipe(response.push(`${fileToPush}`, pushOps))
     })
-
-    response.sendFile(path.join(__dirname, 'public', urlName))
+    response.end()
+    // response.sendFile(path.join(__dirname, 'public', urlName))
   } else {
     return next()
   }
 })
 
-app.get('/', function (request, response) {
-  response.send('hello, http2!')
-})
 
 var options = {
   key: fs.readFileSync('./server.key'),
   cert: fs.readFileSync('./server.crt')
 }
-
-app.get('/pushy', (request, response) => {
-  var stream = response.push('/main.js', pushOps)
-  stream.on('error', function() {
-  })
-  stream.end('alert("hello from push stream!");')
-  response.end('<script src="/main.js"></script>')
-})
 
 require('spdy')
   .createServer(options, app)
