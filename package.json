@@ -6,9 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["node.js", "http2"],
+  "author": "Azat Mardan",
+  "license": "MIT",
   "dependencies": {
     "http2": "^3.3.4"
   }
