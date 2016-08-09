@@ -42,8 +42,13 @@ app.use((request, response, next)=>{
           fs.readFile(fileToPushPath, (error, data)=>{
             if (error) return cb(error)
             console.log('Pushing', fileToPush, fileToPushPath)
-            response.push(`/${fileToPush}`, pushOps).end(data)
-            cb()
+            try {
+              response.push(`/${fileToPush}`, pushOps).end(data)
+              cb()
+            } catch(e) {
+              cb(e)
+            }
+
           })
         }
       })
