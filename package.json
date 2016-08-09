@@ -1,15 +1,24 @@
 {
-  "name": "node-h2-server-push",
+  "name": "http2-node-server-push",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./node_modules/.bin/node-dev ."
   },
-  "keywords": ["node.js", "http2"],
+  "keywords": [
+    "node.js",
+    "http2"
+  ],
   "author": "Azat Mardan",
   "license": "MIT",
   "dependencies": {
-    "http2": "^3.3.4"
+    "express": "^4.14.0",
+    "morgan": "^1.7.0",
+    "spdy": "^3.4.0"
+  },
+  "devDependencies": {
+    "node-dev": "^3.1.3"
   }
 }
