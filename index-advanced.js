@@ -29,8 +29,9 @@ const logger = require('morgan')
 app.use(logger('dev'))
 app.use((request, response, next)=>{
   let urlName = url.parse(request.url).pathname.substr(1)
-  console.log('Request for: ', urlName)
+
   if (urlName === '' || urlName === '/') urlName = 'index.html'
+  console.log('Request for: ', urlName)
   if (files[urlName]) {
     // let assets = []
     let assets = files[urlName]
@@ -43,7 +44,7 @@ app.use((request, response, next)=>{
             console.log('Will push: ', fileToPush, fileToPushPath)
             try {
               response.push(`/${fileToPush}`, {}).end(data)
-              // response.push(`/${fileToPush}`, pushOps).end(data) 
+              // response.push(`/${fileToPush}`, pushOps).end(data)
               cb()
             } catch(e) {
               cb(e)
