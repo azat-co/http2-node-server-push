@@ -3,16 +3,6 @@ var app = express()
 const fs = require('fs')
 const path = require('path')
 const url = require('url')
-const pushOps = {
-  status: 200, // optional
-  method: 'GET', // optional
-  request: {
-    accept: '*/*'
-  },
-  response: {
-    'Content-Type': 'application/javascript'
-  }
-}
 
 let files = {}
 fs.readdir('public', (error, data)=>{
@@ -23,6 +13,7 @@ fs.readdir('public', (error, data)=>{
       .filter(line=>line.match(/src *?= *?"(.*)"/)!=null)
       .map(line=>line.match(/src *?= *?"(.*)"/)[1])
   })
+  console.log(files)
 })
 
 const logger = require('morgan')
@@ -33,18 +24,17 @@ app.use((request, response, next)=>{
   if (urlName === '' || urlName === '/') urlName = 'index.html'
   console.log('Request for: ', urlName)
   if (files[urlName]) {
-    // let assets = []
     let assets = files[urlName]
       .filter(name=>(name.substr(0,4)!='http'))
       .map((fileToPush)=>{
         let fileToPushPath = path.join(__dirname, 'public', fileToPush)
         return (cb)=>{
+          if (fileToPushPath.length>100) return cb()
           fs.readFile(fileToPushPath, (error, data)=>{
             if (error) return cb(error)
             console.log('Will push: ', fileToPush, fileToPushPath)
             try {
               response.push(`/${fileToPush}`, {}).end(data)
-              // response.push(`/${fileToPush}`, pushOps).end(data)
               cb()
             } catch(e) {
               cb(e)
@@ -53,16 +43,20 @@ app.use((request, response, next)=>{
           })
         }
       })
+    // Uncomment to disable server push
+    // assets = []
     console.log('Total number of assets to push: ', assets.length)
-
-    require('neo-async').parallel(assets, (results)=>{
-      // console.log('end', results)
+    assets.unshift((cb)=>{
       fs.readFile(path.join(__dirname, 'public', urlName), (error, data)=>{
         if (error) return cb(error)
         response.write(data)
-        response.end()
+        // console.log(data)
+        cb()
       })
+    })
 
+    require('neo-async').parallel(assets, (results)=>{
+      response.end()
     })
   } else {
     return next()
